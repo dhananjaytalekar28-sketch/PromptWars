@@ -43,6 +43,9 @@ Build a GenAI-powered recovery and prevention web app for people navigating subs
 | Auth | None — role + optional nickname |
 | MVP breadth | Fuller lean: hub flows + risk adaptation + caregiver briefing |
 | Architecture | Crisis Hub — one Moment drives all GenAI features |
+| Theming | Day / night mode (user toggle + system preference) |
+| International layout | Full RTL support (logical CSS, mirrored chrome) |
+| Accessibility bar | WCAG 2.2 AA target + VPAT-oriented checklist in repo |
 
 ---
 
@@ -148,7 +151,21 @@ Person and Caregiver share one Moment in `localStorage` so role switching demons
 
 **Voice:** `SpeechRecognition` (where supported) writes into `voiceOrTextNote`; unsupported browsers hide voice and keep chips.
 
-**Visual / a11y posture:** large crisis CTAs, semantic HTML, focus visible, contrast-safe, `prefers-reduced-motion`, labeled icon buttons. Avoid generic purple-gradient “AI SaaS” chrome; calm, high-legibility recovery aesthetic with CSS variables.
+**Visual posture:** large crisis CTAs; calm, high-legibility recovery aesthetic via CSS variables (not purple-gradient “AI SaaS” chrome). Theme tokens must work in both day and night modes.
+
+**Theme (day / night):**
+
+- CSS variables for color, surface, text, focus ring, borders
+- `data-theme="light" | "dark"` on `<html>` (or equivalent)
+- Default follows `prefers-color-scheme`; user toggle persists in `localStorage`
+- Both themes meet contrast requirements for text and interactive controls
+
+**RTL:**
+
+- Set `dir` from locale / manual LTR↔RTL toggle for demo (persist preference)
+- Layout uses logical properties only (`inset-inline`, `margin-inline`, `padding-inline`, `text-align: start`, flex/grid without physical left/right assumptions)
+- Icons that imply direction (back chevrons, progress) mirror in RTL
+- Do not hardcode left/right paddings that break mirrored layout
 
 ---
 
@@ -195,34 +212,84 @@ Fail closed: never present placeholder text as if it were a successful AI genera
 
 ---
 
-## 9. Security
+## 9. Security considerations
 
-- Secrets only in environment variables; never commit `.env`
-- Server-only Gemini calls
-- Zod allow-lists for chips; max length on free text
-- Helpline URLs are constants (no user-controlled server fetch)
-- Security headers via Next.js defaults / config as applicable
+### 9.1 No API keys in the frontend
+
+- `GEMINI_API_KEY` exists only in server environment variables (e.g. Vercel env / `.env.local` gitignored)
+- All model calls go through Next.js Route Handlers; the browser never receives or embeds the key
+- Client bundles must be audited so no `NEXT_PUBLIC_*` secret leaks the Gemini credential
+- Missing key → honest `503` / “AI unavailable”; never fall back to canned “success” copy
+
+### 9.2 User input sanitized to prevent XSS
+
+- All user-provided strings (nickname, optional note, chip-derived context) validated with Zod on the server (type, allow-list, max length) before Gemini or persistence paths trust them
+- Client display of user text and model text uses React text nodes / escaped rendering only — treat GenAI output as untrusted text, not HTML
+- If any curated Learn content needs limited markup later, it must go through a strict sanitizer allow-list; MVP Learn cards prefer plain text / safe React elements authored in code
+- Do not interpolate user or model strings into `href`, `src`, or event handlers without validation (helplines remain constant allow-listed URLs)
+
+### 9.3 Safe DOM manipulation (no unsafe `innerHTML`)
+
+- No `dangerouslySetInnerHTML`, no raw `element.innerHTML = …` for user or AI content
+- Prefer React declarative rendering and `textContent`-equivalent patterns
+- Copy/share/read-aloud operate on strings already held in state, not on HTML scraped from the DOM
+- Any third-party UI helper that injects HTML is disallowed unless reviewed and unused for untrusted content
+
+### 9.4 Additional hardening
+
+- Helpline URLs are constants (no user-controlled server-side fetch → no SSRF)
+- Security headers via Next.js config as applicable (`Content-Security-Policy` tight enough to block inline script injection where practical; `X-Content-Type-Options`, `Referrer-Policy`, frame protections)
 - No PII required; nickname optional and local-only
-- Do not log full user notes or API keys
+- Do not log full user notes, tokens, or API keys
+- Never commit `.env` / `.env.local`
 
 ---
 
-## 10. Testing & quality
+## 10. Accessibility: WCAG, VPAT, theme, RTL
+
+### 10.1 WCAG 2.2 AA (target)
+
+- Perceivable: contrast in both day and night themes; text alternatives for icon-only controls; no information by color alone (risk level also numeric/text)
+- Operable: full keyboard path for role pick → check-in → intervene → scripts → caregiver briefing; visible focus; large crisis tap targets; no keyboard traps; respect `prefers-reduced-motion`
+- Understandable: clear labels/instructions; consistent navigation; error messages that name the field and recovery action (Retry)
+- Robust: semantic landmarks/headings; correct names/roles/states for chips (`aria-pressed`), dialogs, and live regions for AI loading/errors (`aria-live` polite/assertive as appropriate)
+
+### 10.2 VPAT-oriented evidence
+
+Ship a lightweight accessibility conformance checklist in-repo (e.g. `docs/accessibility/VPAT-checklist.md`) mapped to WCAG 2.2 AA criteria touched by this app. For each applicable row: Supports / Partially Supports / Does Not Support + short notes. This is an internal VPAT-style artifact for reviewers — not a formal third-party certification.
+
+Manual spot-checks before submit: keyboard-only walkthrough, one screen reader pass (Narrator or VoiceOver), day and night contrast check, LTR and RTL layout check.
+
+### 10.3 Day / night mode
+
+- ThemeProvider (or equivalent) applies CSS variables; toggle in chrome; persists preference
+- Crisis CTAs remain high-contrast in both themes
+- AI loading/error banners remain readable in both themes
+
+### 10.4 RTL support
+
+- Document and demo LTR/RTL toggle (or locale `dir`)
+- Logical CSS only; mirrored directional affordances
+- Dual-script panels stack/order correctly under `dir="rtl"` (person/caregiver labels remain clear)
+
+---
+
+## 11. Testing & quality
 
 **Automated:**
 
-- Unit: Moment helpers, risk→home adaptation, Zod schemas
-- Route tests with mocked Gemini client proving the call path (and error paths)
-- Component tests for RolePicker, check-in, dual-script panels
-- TypeScript strict + ESLint
+- Unit: Moment helpers, risk→home adaptation, Zod schemas, XSS-sensitive render helpers (ensure strings escape / no HTML path)
+- Route tests with mocked Gemini client proving the call path (and error paths); assert key is read only server-side in client config tests where applicable
+- Component tests for RolePicker, check-in, dual-script panels, theme toggle, `dir` switching smoke test
+- TypeScript strict + ESLint (include rule discouraging `dangerouslySetInnerHTML` / flagging it)
 
-**Accessibility checks:** keyboard path through check-in → intervene → scripts; screen-reader labels on chips and copy actions.
+**Accessibility checks:** keyboard path through check-in → intervene → scripts; screen-reader labels on chips and copy actions; axe-core (or equivalent) on primary pages; contrast check for light and dark tokens.
 
-**README for evaluators:** no login; env var required; 8-step walkthrough; deploy instructions (e.g. Vercel).
+**README for evaluators:** no login; env var required; 8-step walkthrough; how to toggle day/night and RTL; deploy instructions (e.g. Vercel); pointer to VPAT checklist.
 
 ---
 
-## 11. Out of scope (YAGNI)
+## 12. Out of scope (YAGNI)
 
 - Authentication / multi-user cloud sync
 - Clinical assessment or diagnosis
@@ -230,28 +297,32 @@ Fail closed: never present placeholder text as if it were a successful AI genera
 - History analytics dashboard
 - Native mobile apps
 - OpenAI provider adapter (Gemini only for MVP)
+- Formal third-party VPAT certification / legal accessibility audit (in-repo checklist only)
+- Full i18n translation of all strings (RTL layout yes; multi-language copy packs optional later)
 
 ---
 
-## 12. Implementation sequencing (preview)
+## 13. Implementation sequencing (preview)
 
-1. Scaffold Next.js app + Moment store + role routes + disclaimer
+1. Scaffold Next.js app + Moment store + role routes + disclaimer + theme/RTL shell + CSP-minded headers
 2. Check-in + home adaptation (no AI yet)
-3. Gemini client + `/api/intervene` + Intervene UI
+3. Gemini client + `/api/intervene` + Intervene UI (safe text rendering)
 4. `/api/scripts` + Scripts UI + copy/share
 5. Caregiver home + `/api/briefing`
 6. Learn cards + `/api/learn`
 7. Safety panel + helplines
-8. Voice optional path + a11y pass
+8. Voice optional path + WCAG pass + VPAT checklist + day/night & RTL verification
 9. Tests, README, deploy with `GEMINI_API_KEY`
 
 Detailed task breakdown belongs in the implementation plan (next step after spec sign-off).
 
 ---
 
-## 13. Spec self-review notes
+## 14. Spec self-review notes
 
-- No TBD placeholders remaining for MVP scope
+- No unresolved TBD placeholders for MVP scope
 - Architecture, APIs, and walkthrough are consistent (single Moment hub)
-- Scope fits one implementation plan; out-of-scope explicitly listed
+- Security section explicitly covers no frontend keys, XSS sanitization/validation, and no unsafe `innerHTML`
+- WCAG 2.2 AA target, VPAT-style checklist, day/night mode, and RTL are in scope for implementation
+- Scope still fits one implementation plan; formal certification and full i18n remain out of scope
 - Ambiguities resolved: no auth; Gemini-only; dual scripts; hybrid zero-typing; localStorage persistence
