@@ -3,16 +3,17 @@
 import { useApp } from "@/context/AppContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LANGUAGES, type LangCode } from "@/lib/i18n";
 
 export function Header() {
-  const { profile, theme, dir, toggleTheme, toggleDir, switchRole } = useApp();
+  const { profile, theme, lang, t, toggleTheme, setLang, switchRole } = useApp();
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
       <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
         <Link href="/" className="font-semibold text-lg text-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] rounded">
-          RecoverAI
+          {t("app.name")}
         </Link>
 
         <nav className="flex items-center gap-2 flex-wrap" aria-label="Main navigation">
@@ -20,29 +21,43 @@ export function Header() {
             <>
               {profile.role === "person" && (
                 <>
-                  <NavLink href="/person" current={pathname}>Home</NavLink>
-                  <NavLink href="/intervene" current={pathname}>Intervene</NavLink>
-                  <NavLink href="/scripts" current={pathname}>Scripts</NavLink>
+                  <NavLink href="/person" current={pathname} label={t("nav.home")} />
+                  <NavLink href="/intervene" current={pathname} label={t("nav.intervene")} />
+                  <NavLink href="/scripts" current={pathname} label={t("nav.scripts")} />
                 </>
               )}
               {profile.role === "caregiver" && (
                 <>
-                  <NavLink href="/caregiver" current={pathname}>Home</NavLink>
-                  <NavLink href="/scripts" current={pathname}>Scripts</NavLink>
+                  <NavLink href="/caregiver" current={pathname} label={t("nav.home")} />
+                  <NavLink href="/scripts" current={pathname} label={t("nav.scripts")} />
                 </>
               )}
-              <NavLink href="/learn" current={pathname}>Learn</NavLink>
-              <NavLink href="/safety" current={pathname}>Safety</NavLink>
+              <NavLink href="/learn" current={pathname} label={t("nav.learn")} />
+              <NavLink href="/safety" current={pathname} label={t("nav.safety")} />
 
               <button
                 onClick={() => switchRole(profile.role === "person" ? "caregiver" : "person")}
                 className="ms-2 text-xs px-2 py-1 rounded border border-[var(--color-border)] hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-                aria-label={`Switch to ${profile.role === "person" ? "caregiver" : "person"} role`}
+                aria-label={`${t("nav.switchTo")} ${profile.role === "person" ? t("nav.caregiver") : t("nav.person")}`}
               >
-                Switch to {profile.role === "person" ? "Caregiver" : "Person"}
+                {t("nav.switchTo")} {profile.role === "person" ? t("nav.caregiver") : t("nav.person")}
               </button>
             </>
           )}
+
+          {/* Language dropdown */}
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as LangCode)}
+            className="text-xs px-2 py-1 rounded border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+            aria-label="Select language"
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
+          </select>
 
           <button
             onClick={toggleTheme}
@@ -51,20 +66,13 @@ export function Header() {
           >
             {theme === "light" ? "🌙" : "☀️"}
           </button>
-          <button
-            onClick={toggleDir}
-            className="p-2 rounded-full hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-            aria-label={`Switch to ${dir === "ltr" ? "RTL" : "LTR"} layout`}
-          >
-            {dir === "ltr" ? "RTL" : "LTR"}
-          </button>
         </nav>
       </div>
     </header>
   );
 }
 
-function NavLink({ href, current, children }: { href: string; current: string; children: React.ReactNode }) {
+function NavLink({ href, current, label }: { href: string; current: string; label: string }) {
   const active = current === href;
   return (
     <Link
@@ -74,7 +82,7 @@ function NavLink({ href, current, children }: { href: string; current: string; c
       }`}
       aria-current={active ? "page" : undefined}
     >
-      {children}
+      {label}
     </Link>
   );
 }

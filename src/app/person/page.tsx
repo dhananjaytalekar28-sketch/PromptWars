@@ -7,7 +7,7 @@ import { ALLOWED_CHIPS, type ChipId, type Moment } from "@/lib/types";
 import Link from "next/link";
 
 export default function PersonHome() {
-  const { profile, moment, setMoment, updateMoment } = useApp();
+  const { profile, moment, setMoment, t } = useApp();
   const router = useRouter();
 
   const [risk, setRisk] = useState<number>(moment?.riskLevel ?? 3);
@@ -43,13 +43,12 @@ export default function PersonHome() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">
-        {profile.nickname ? `Hey ${profile.nickname}` : "Hey there"} — how are you right now?
+        {profile.nickname ? t("person.greeting", { name: profile.nickname }) : t("person.greeting.default")}
       </h1>
 
-      {/* Risk level */}
-      <section aria-label="Risk level check-in">
-        <p className="text-sm text-[var(--color-text-muted)] mb-2">Urge intensity (1 = low, 5 = high)</p>
-        <div className="flex gap-2" role="radiogroup" aria-label="Urge intensity">
+      <section aria-label={t("person.risk.label")}>
+        <p className="text-sm text-[var(--color-text-muted)] mb-2">{t("person.risk.label")}</p>
+        <div className="flex gap-2" role="radiogroup" aria-label={t("person.risk.label")}>
           {[1, 2, 3, 4, 5].map((level) => (
             <button
               key={level}
@@ -68,9 +67,8 @@ export default function PersonHome() {
         </div>
       </section>
 
-      {/* Situation chips */}
-      <section aria-label="What's going on">
-        <p className="text-sm text-[var(--color-text-muted)] mb-2">What&apos;s going on? (tap all that apply)</p>
+      <section aria-label={t("person.chips.label")}>
+        <p className="text-sm text-[var(--color-text-muted)] mb-2">{t("person.chips.label")}</p>
         <div className="flex flex-wrap gap-2">
           {ALLOWED_CHIPS.map((chip) => (
             <button
@@ -83,7 +81,7 @@ export default function PersonHome() {
                   : "bg-[var(--color-chip-bg)] text-[var(--color-chip-text)] hover:bg-[var(--color-chip-active)] hover:text-white"
               }`}
             >
-              {chip.replace("-", " ")}
+              {t(`chip.${chip}`)}
             </button>
           ))}
         </div>
@@ -94,7 +92,7 @@ export default function PersonHome() {
         disabled={chips.length === 0}
         className="self-start px-6 py-3 rounded-full bg-[var(--color-primary)] text-white font-semibold disabled:opacity-40 hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] transition-colors"
       >
-        Check in
+        {t("person.checkin")}
       </button>
 
       {moment && (
@@ -104,27 +102,27 @@ export default function PersonHome() {
               href="/safety"
               className="block p-4 rounded-xl bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 text-center font-semibold text-[var(--color-danger)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             >
-              🆘 Safety &amp; Helplines
+              🆘 {t("person.safety.link")}
             </Link>
           )}
           <Link
             href="/intervene"
             className="block p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center font-semibold hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
           >
-            🧠 Get Intervention Steps
+            🧠 {t("person.intervene.link")}
           </Link>
           <Link
             href="/scripts"
             className="block p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center font-semibold hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
           >
-            📝 Emergency Scripts
+            📝 {t("person.scripts.link")}
           </Link>
           {!isHighRisk && (
             <Link
               href="/learn"
               className="block p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center font-semibold hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             >
-              📚 Learn &amp; Prevent
+              📚 {t("person.learn.link")}
             </Link>
           )}
         </section>

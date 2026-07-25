@@ -2,11 +2,11 @@
 
 import { useApp } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 export default function CaregiverHome() {
-  const { profile, moment } = useApp();
+  const { profile, moment, t } = useApp();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,27 +51,26 @@ export default function CaregiverHome() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">
-        {profile.nickname ? `Hey ${profile.nickname}` : "Caregiver"} — here&apos;s the latest
+        {profile.nickname ? t("caregiver.greeting", { name: profile.nickname }) : t("caregiver.greeting.default")}
       </h1>
 
       {!moment ? (
         <div className="p-6 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center">
-          <p className="text-[var(--color-text-muted)]">
-            No check-in yet. Once your loved one completes a check-in, you&apos;ll see their status here and can generate a briefing.
-          </p>
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-            Tip: Switch to "Person" role to demo the check-in flow.
-          </p>
+          <p className="text-[var(--color-text-muted)]">{t("caregiver.empty")}</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">{t("caregiver.empty.tip")}</p>
         </div>
       ) : (
         <>
           <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
-            <p className="text-sm text-[var(--color-text-muted)]">Last check-in</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{t("caregiver.lastcheckin")}</p>
             <p className="font-semibold">
-              Urge level: {moment.riskLevel}/5 — {moment.chips.map((c) => c.replace("-", " ")).join(", ")}
+              {t("caregiver.urgelevel", {
+                level: String(moment.riskLevel),
+                chips: moment.chips.map((c) => t(`chip.${c}`)).join(", "),
+              })}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              Updated: {new Date(moment.updatedAt).toLocaleString()}
+              {t("common.updated")}: {new Date(moment.updatedAt).toLocaleString()}
             </p>
           </div>
 
@@ -80,24 +79,24 @@ export default function CaregiverHome() {
             disabled={loading}
             className="self-start px-6 py-3 rounded-full bg-[var(--color-primary)] text-white font-semibold disabled:opacity-40 hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] transition-colors"
           >
-            {loading ? "Generating..." : briefing ? "Refresh Briefing" : "Get Caregiver Briefing"}
+            {loading ? t("caregiver.generating") : briefing ? t("caregiver.regenerate") : t("caregiver.generate")}
           </button>
 
           {error && (
             <div role="alert" className="p-3 rounded-lg bg-red-100 dark:bg-red-950 text-[var(--color-danger)] text-sm">
-              {error} — <button onClick={generateBriefing} className="underline font-medium">Retry</button>
+              {error} — <button onClick={generateBriefing} className="underline font-medium">{t("error.retry")}</button>
             </div>
           )}
 
           {briefing && (
             <section className="flex flex-col gap-4">
               <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
-                <h2 className="font-semibold mb-2">What they may be experiencing</h2>
+                <h2 className="font-semibold mb-2">{t("caregiver.experiencing")}</h2>
                 <p className="text-sm text-[var(--color-text-muted)]">{briefing.briefing}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="p-4 rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                  <h3 className="font-semibold text-[var(--color-success)] mb-2">✓ Things to say</h3>
+                  <h3 className="font-semibold text-[var(--color-success)] mb-2">✓ {t("caregiver.dosay")}</h3>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     {briefing.doSay.map((item, i) => (
                       <li key={i}>{item}</li>
@@ -105,7 +104,7 @@ export default function CaregiverHome() {
                   </ul>
                 </div>
                 <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-                  <h3 className="font-semibold text-[var(--color-danger)] mb-2">✗ Avoid saying</h3>
+                  <h3 className="font-semibold text-[var(--color-danger)] mb-2">✗ {t("caregiver.dontsay")}</h3>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     {briefing.dontSay.map((item, i) => (
                       <li key={i}>{item}</li>
@@ -121,13 +120,13 @@ export default function CaregiverHome() {
               href="/scripts"
               className="px-5 py-2 rounded-full border-2 border-[var(--color-primary)] text-[var(--color-primary)] font-semibold hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             >
-              📝 View Scripts
+              📝 {t("caregiver.viewscripts")}
             </Link>
             <Link
               href="/safety"
               className="px-5 py-2 rounded-full border-2 border-[var(--color-danger)] text-[var(--color-danger)] font-semibold hover:bg-red-50 dark:hover:bg-red-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             >
-              🆘 Safety
+              🆘 {t("caregiver.safety")}
             </Link>
           </div>
         </>

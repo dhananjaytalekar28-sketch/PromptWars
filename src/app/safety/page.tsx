@@ -9,7 +9,7 @@ const HELPLINES = [
 ] as const;
 
 export default function SafetyPage() {
-  const { moment } = useApp();
+  const { moment, t } = useApp();
 
   function copyScript(which: "person" | "caregiver") {
     const text =
@@ -19,26 +19,22 @@ export default function SafetyPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Safety &amp; Grounding</h1>
+      <h1 className="text-2xl font-bold">{t("safety.title")}</h1>
 
-      {/* Grounding exercise */}
       <section className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
-        <h2 className="font-semibold text-lg mb-3">🌿 5-4-3-2-1 Grounding</h2>
-        <p className="text-[var(--color-text-muted)] text-sm mb-3">
-          Focus on what&apos;s around you right now:
-        </p>
+        <h2 className="font-semibold text-lg mb-3">🌿 {t("safety.grounding.title")}</h2>
+        <p className="text-[var(--color-text-muted)] text-sm mb-3">{t("safety.grounding.subtitle")}</p>
         <ul className="space-y-2 text-sm">
-          <li><strong>5</strong> things you can <strong>see</strong></li>
-          <li><strong>4</strong> things you can <strong>touch</strong></li>
-          <li><strong>3</strong> things you can <strong>hear</strong></li>
-          <li><strong>2</strong> things you can <strong>smell</strong></li>
-          <li><strong>1</strong> thing you can <strong>taste</strong></li>
+          <li><strong>5</strong> {t("safety.grounding.see")}</li>
+          <li><strong>4</strong> {t("safety.grounding.touch")}</li>
+          <li><strong>3</strong> {t("safety.grounding.hear")}</li>
+          <li><strong>2</strong> {t("safety.grounding.smell")}</li>
+          <li><strong>1</strong> {t("safety.grounding.taste")}</li>
         </ul>
       </section>
 
-      {/* Helplines */}
       <section>
-        <h2 className="font-semibold text-lg mb-3">📞 Helplines</h2>
+        <h2 className="font-semibold text-lg mb-3">📞 {t("safety.helplines.title")}</h2>
         <div className="flex flex-col gap-3">
           {HELPLINES.map((h) => (
             <a
@@ -55,24 +51,23 @@ export default function SafetyPage() {
         </div>
       </section>
 
-      {/* Copy last scripts */}
       {moment?.lastScripts && (
         <section>
-          <h2 className="font-semibold text-lg mb-3">📋 Copy Last Scripts</h2>
+          <h2 className="font-semibold text-lg mb-3">📋 {t("safety.copy.title")}</h2>
           <div className="flex gap-3">
             <button
               onClick={() => copyScript("person")}
               className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-              aria-label="Copy person script to clipboard"
+              aria-label={t("safety.copy.person")}
             >
-              📋 Person Script
+              📋 {t("safety.copy.person")}
             </button>
             <button
               onClick={() => copyScript("caregiver")}
               className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-              aria-label="Copy caregiver script to clipboard"
+              aria-label={t("safety.copy.caregiver")}
             >
-              📋 Caregiver Script
+              📋 {t("safety.copy.caregiver")}
             </button>
           </div>
         </section>

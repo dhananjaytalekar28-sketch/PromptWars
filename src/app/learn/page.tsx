@@ -5,7 +5,7 @@ import { useState } from "react";
 import { LEARN_CARDS, type LearnCard } from "@/lib/learn-cards";
 
 export default function LearnPage() {
-  const { moment, updateMoment } = useApp();
+  const { moment, updateMoment, t } = useApp();
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [personalizing, setPersonalizing] = useState<string | null>(null);
   const [blurbs, setBlurbs] = useState<Record<string, string>>(
@@ -43,10 +43,8 @@ export default function LearnPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Learn &amp; Prevent</h1>
-      <p className="text-[var(--color-text-muted)]">
-        Evidence-based techniques for recovery. Tap &quot;Personalize&quot; to see why it matters for your situation.
-      </p>
+      <h1 className="text-2xl font-bold">{t("learn.title")}</h1>
+      <p className="text-[var(--color-text-muted)]">{t("learn.subtitle")}</p>
 
       <div className="flex flex-col gap-4">
         {LEARN_CARDS.map((card) => (
@@ -72,7 +70,7 @@ export default function LearnPage() {
 
                 {blurbs[card.id] && (
                   <div className="mt-3 p-3 rounded-lg bg-[var(--color-chip-bg)] text-sm">
-                    <p className="font-medium text-[var(--color-primary)] mb-1">Why this matters for you:</p>
+                    <p className="font-medium text-[var(--color-primary)] mb-1">{t("learn.whymatters")}</p>
                     <p>{blurbs[card.id]}</p>
                   </div>
                 )}
@@ -83,14 +81,12 @@ export default function LearnPage() {
                     disabled={personalizing === card.id}
                     className="mt-3 px-4 py-2 text-sm rounded-full border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-chip-bg)] disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                   >
-                    {personalizing === card.id ? "Personalizing..." : "✨ Personalize for me"}
+                    {personalizing === card.id ? t("learn.personalizing") : `✨ ${t("learn.personalize")}`}
                   </button>
                 )}
 
                 {!moment && (
-                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                    Complete a check-in first to enable personalization.
-                  </p>
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">{t("learn.checkin.required")}</p>
                 )}
               </div>
             )}

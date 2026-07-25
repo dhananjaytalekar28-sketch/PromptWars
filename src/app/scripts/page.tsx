@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function ScriptsPage() {
-  const { moment, updateMoment } = useApp();
+  const { moment, updateMoment, t } = useApp();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,36 +59,38 @@ export default function ScriptsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Emergency Scripts</h1>
-      <p className="text-[var(--color-text-muted)]">
-        Dual scripts — one for you, one for your caregiver — personalized to this moment.
-      </p>
+      <h1 className="text-2xl font-bold">{t("scripts.title")}</h1>
+      <p className="text-[var(--color-text-muted)]">{t("scripts.subtitle")}</p>
 
       <button
         onClick={generate}
         disabled={loading}
         className="self-start px-6 py-3 rounded-full bg-[var(--color-primary)] text-white font-semibold disabled:opacity-40 hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] transition-colors"
       >
-        {loading ? "Generating..." : scripts ? "Regenerate Scripts" : "Generate Scripts"}
+        {loading ? t("scripts.generating") : scripts ? t("scripts.regenerate") : t("scripts.generate")}
       </button>
 
       {error && (
         <div role="alert" className="p-3 rounded-lg bg-red-100 dark:bg-red-950 text-[var(--color-danger)] text-sm">
-          {error} — <button onClick={generate} className="underline font-medium">Retry</button>
+          {error} — <button onClick={generate} className="underline font-medium">{t("error.retry")}</button>
         </div>
       )}
 
       {scripts && (
         <div className="grid gap-4 md:grid-cols-2">
           <ScriptPanel
-            title="Your Script (Person)"
+            title={t("scripts.person.title")}
             text={scripts.personScript}
+            copyLabel={t("scripts.copy")}
+            speakLabel={t("scripts.speak")}
             onCopy={() => copyToClipboard(scripts.personScript)}
             onSpeak={() => speakText(scripts.personScript)}
           />
           <ScriptPanel
-            title="Caregiver Script"
+            title={t("scripts.caregiver.title")}
             text={scripts.caregiverScript}
+            copyLabel={t("scripts.copy")}
+            speakLabel={t("scripts.speak")}
             onCopy={() => copyToClipboard(scripts.caregiverScript)}
             onSpeak={() => speakText(scripts.caregiverScript)}
           />
@@ -101,11 +103,15 @@ export default function ScriptsPage() {
 function ScriptPanel({
   title,
   text,
+  copyLabel,
+  speakLabel,
   onCopy,
   onSpeak,
 }: {
   title: string;
   text: string;
+  copyLabel: string;
+  speakLabel: string;
   onCopy: () => void;
   onSpeak: () => void;
 }) {
@@ -117,16 +123,16 @@ function ScriptPanel({
         <button
           onClick={onCopy}
           className="px-3 py-1 text-xs rounded border border-[var(--color-border)] hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-          aria-label={`Copy ${title}`}
+          aria-label={`${copyLabel} ${title}`}
         >
-          📋 Copy
+          📋 {copyLabel}
         </button>
         <button
           onClick={onSpeak}
           className="px-3 py-1 text-xs rounded border border-[var(--color-border)] hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-          aria-label={`Read aloud ${title}`}
+          aria-label={`${speakLabel} ${title}`}
         >
-          🔊 Read Aloud
+          🔊 {speakLabel}
         </button>
       </div>
     </section>

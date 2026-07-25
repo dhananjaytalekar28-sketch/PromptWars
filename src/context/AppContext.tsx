@@ -2,17 +2,21 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import type { Profile, Moment, Role } from "@/lib/types";
+import { LANGUAGES, getTranslations, t as tFn, type LangCode, type Translations } from "@/lib/i18n";
 
 interface AppState {
   profile: Profile | null;
   moment: Moment | null;
   theme: "light" | "dark";
+  lang: LangCode;
   dir: "ltr" | "rtl";
+  translations: Translations;
+  t: (key: string, vars?: Record<string, string>) => string;
   setProfile: (p: Profile | null) => void;
   setMoment: (m: Moment | null) => void;
   updateMoment: (partial: Partial<Moment>) => void;
   toggleTheme: () => void;
-  toggleDir: () => void;
+  setLang: (code: LangCode) => void;
   switchRole: (role: Role) => void;
 }
 
@@ -33,7 +37,7 @@ function saveJSON(key: string, value: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // quota exceeded — degrade gracefully
+    // quota exceeded
   }
 }
 
@@ -41,17 +45,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<Profile | null>(null);
   const [moment, setMomentState] = useState<Moment | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [dir, setDir] = useState<"ltr" | "rtl">("ltr");
+  const [lang, setLangState] = useState<LangCode>("en");
   const [hydrated, setHydrated] = useState(false);
+
+  const langDef = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
+  const dir = langDef.dir;
+  const translations = getTranslations(lang);
+  const t = useCallback((key: string, vars?: Record<string, string>) => tFn(translations, key, vars), [translations]);
 
   useEffect(() => {
     setProfileState(loadJSON<Profile>("rp_profile"));
     setMomentState(loadJSON<Moment>("rp_moment"));
     const savedTheme = localStorage.getItem("rp_theme") as "light" | "dark" | null;
-    const savedDir = localStorage.getItem("rp_dir") as "ltr" | "rtl" | null;
+    const savedLang = localStorage.getItem("rp_lang") as LangCode | null;
     if (savedTheme) setTheme(savedTheme);
     else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
-    if (savedDir) setDir(savedDir);
+    if (savedLang && LANGUAGES.some((l) => l.code === savedLang)) setLangState(savedLang);
     setHydrated(true);
   }, []);
 
@@ -65,8 +74,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     document.documentElement.setAttribute("dir", dir);
-    localStorage.setItem("rp_dir", dir);
-  }, [dir, hydrated]);
+    document.documentElement.setAttribute("lang", lang);
+    localStorage.setItem("rp_lang", lang);
+  }, [lang, dir, hydrated]);
 
   const setProfile = useCallback((p: Profile | null) => {
     setProfileState(p);
@@ -87,7 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === "light" ? "dark" : "light")), []);
-  const toggleDir = useCallback(() => setDir((d) => (d === "ltr" ? "rtl" : "ltr")), []);
+  const setLang = useCallback((code: LangCode) => setLangState(code), []);
   const switchRole = useCallback(
     (role: Role) => {
       const newProfile: Profile = { ...profile, role };
@@ -103,7 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ profile, moment, theme, dir, setProfile, setMoment, updateMoment, toggleTheme, toggleDir, switchRole }}
+      value={{ profile, moment, theme, lang, dir, translations, t, setProfile, setMoment, updateMoment, toggleTheme, setLang, switchRole }}
     >
       {children}
     </AppContext.Provider>
