@@ -3,6 +3,10 @@
 .next
 node_modules
 
+# Firebase
+.firebase
+out
+
 # env
 .env
 .env.local
