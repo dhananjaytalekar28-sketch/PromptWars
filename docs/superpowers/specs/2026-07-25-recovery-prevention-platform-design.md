@@ -25,8 +25,10 @@ Build a GenAI-powered recovery and prevention web app for people navigating subs
 - Every demoed feature works end-to-end
 - Deployed URL must stay up
 - Code assessment: quality, security, efficiency, testing, accessibility, problem alignment
+- Security bar: no frontend API keys; sanitized input (XSS); no unsafe `innerHTML` / `dangerouslySetInnerHTML` for untrusted content
+- Accessibility bar: WCAG 2.2 AA target, VPAT-style checklist, day/night mode, RTL support
 
-**Success for review:** An evaluator can pick a role, complete a check-in, run intervene → dual scripts → caregiver briefing → learn personalization → safety tools, with visible real GenAI responses and no login wall.
+**Success for review:** An evaluator can pick a role, complete a check-in, run intervene → dual scripts → caregiver briefing → learn personalization → safety tools, with visible real GenAI responses and no login wall — and can toggle day/night and LTR/RTL without breaking the flow.
 
 ---
 
