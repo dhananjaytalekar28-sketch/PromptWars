@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "@/context/AppContext";
-import { Header } from "@/components/Header";
-import { DisclaimerBanner } from "@/components/DisclaimerBanner";
+import { AppProviders } from "@/shared/context/app-providers";
+import { Header } from "@/shared/components/Header";
+import { DisclaimerBanner } from "@/shared/components/DisclaimerBanner";
+import { FlashBanner } from "@/shared/components/FlashBanner";
+import { BottomNav } from "@/shared/components/BottomNav";
+import { SkipLink } from "@/shared/components/SkipLink";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,7 +14,10 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Recovery & Prevention Platform",
+  title: {
+    default: "RecoverAI",
+    template: "%s · RecoverAI",
+  },
   description: "GenAI-powered support for recovery and caregiving",
 };
 
@@ -19,11 +25,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] transition-colors">
-        <AppProvider>
+        <AppProviders>
+          <SkipLink />
           <Header />
           <DisclaimerBanner />
-          <main className="flex-1 flex flex-col w-full max-w-2xl mx-auto px-4 py-6">{children}</main>
-        </AppProvider>
+          <FlashBanner />
+          <main
+            id="main-content"
+            className="flex-1 flex flex-col w-full max-w-[var(--content-width)] mx-auto px-4 py-[var(--space-page)] pb-[calc(var(--bottom-nav-height)+1.5rem)] md:pb-[var(--space-page)]"
+          >
+            {children}
+          </main>
+          <BottomNav />
+        </AppProviders>
       </body>
     </html>
   );

@@ -3,7 +3,7 @@
 **Date:** 2026-07-25  
 **Status:** Approved for implementation planning  
 **Challenge:** PromptWars — multi-modal GenAI recovery & prevention platform  
-**Architecture:** Approach 1 — Crisis Hub  
+**Architecture:** Approach 1 — Crisis Hub
 
 ---
 
@@ -34,20 +34,20 @@ Build a GenAI-powered recovery and prevention web app for people navigating subs
 
 ## 2. Product decisions (locked)
 
-| Decision | Choice |
-| --- | --- |
-| Primary audiences | Both equally — role picker, parallel homes |
-| Zero-typing | Hybrid: chips + optional voice; typing optional never required |
-| Emergency scripts | Dual: person script + caregiver response script |
-| Stack | Next.js (App Router) + TypeScript + React full-stack |
-| GenAI | Google Gemini via server Route Handlers |
-| Credentials | `GEMINI_API_KEY` in env only (free AI Studio key) |
-| Auth | None — role + optional nickname |
-| MVP breadth | Fuller lean: hub flows + risk adaptation + caregiver briefing |
-| Architecture | Crisis Hub — one Moment drives all GenAI features |
-| Theming | Day / night mode (user toggle + system preference) |
-| International layout | Full RTL support (logical CSS, mirrored chrome) |
-| Accessibility bar | WCAG 2.2 AA target + VPAT-oriented checklist in repo |
+| Decision             | Choice                                                         |
+| -------------------- | -------------------------------------------------------------- |
+| Primary audiences    | Both equally — role picker, parallel homes                     |
+| Zero-typing          | Hybrid: chips + optional voice; typing optional never required |
+| Emergency scripts    | Dual: person script + caregiver response script                |
+| Stack                | Next.js (App Router) + TypeScript + React full-stack           |
+| GenAI                | Google Gemini via server Route Handlers                        |
+| Credentials          | `GEMINI_API_KEY` in env only (free AI Studio key)              |
+| Auth                 | None — role + optional nickname                                |
+| MVP breadth          | Fuller lean: hub flows + risk adaptation + caregiver briefing  |
+| Architecture         | Crisis Hub — one Moment drives all GenAI features              |
+| Theming              | Day / night mode (user toggle + system preference)             |
+| International layout | Full RTL support (logical CSS, mirrored chrome)                |
+| Accessibility bar    | WCAG 2.2 AA target + VPAT-oriented checklist in repo           |
 
 ---
 
@@ -68,24 +68,24 @@ Next.js Route Handlers (/api/*)
 
 **Routes (UI):**
 
-| Path | Purpose |
-| --- | --- |
-| `/` | Role picker + optional nickname + disclaimer |
-| `/person` | Person home; adapts to risk level |
-| `/caregiver` | Caregiver home; briefing + shared moment |
-| `/intervene` | Zero-typing intervention flow |
-| `/scripts` | Dual emergency scripts |
-| `/learn` | Curated education + AI “why this helps” |
-| `/safety` | Grounding, helplines, copy/share script |
+| Path         | Purpose                                      |
+| ------------ | -------------------------------------------- |
+| `/`          | Role picker + optional nickname + disclaimer |
+| `/person`    | Person home; adapts to risk level            |
+| `/caregiver` | Caregiver home; briefing + shared moment     |
+| `/intervene` | Zero-typing intervention flow                |
+| `/scripts`   | Dual emergency scripts                       |
+| `/learn`     | Curated education + AI “why this helps”      |
+| `/safety`    | Grounding, helplines, copy/share script      |
 
 **API (all real Gemini):**
 
-| Endpoint | Input | Output |
-| --- | --- | --- |
-| `POST /api/intervene` | Moment | `{ steps: [{ title, body }] }` |
-| `POST /api/scripts` | Moment | `{ personScript, caregiverScript }` |
-| `POST /api/briefing` | Moment | `{ briefing, doSay[], dontSay[] }` |
-| `POST /api/learn` | Moment + cardId | `{ blurb }` |
+| Endpoint              | Input           | Output                              |
+| --------------------- | --------------- | ----------------------------------- |
+| `POST /api/intervene` | Moment          | `{ steps: [{ title, body }] }`      |
+| `POST /api/scripts`   | Moment          | `{ personScript, caregiverScript }` |
+| `POST /api/briefing`  | Moment          | `{ briefing, doSay[], dontSay[] }`  |
+| `POST /api/learn`     | Moment + cardId | `{ blurb }`                         |
 
 Keys never ship to the client. No production UI path returns canned success content when Gemini is down.
 
@@ -200,15 +200,15 @@ This single path exercises every GenAI endpoint and both roles.
 
 ## 8. Error handling
 
-| Condition | Behavior |
-| --- | --- |
-| Missing `GEMINI_API_KEY` | API `503`; UI “AI unavailable” — no fake scripts |
-| Gemini timeout/error | Banner + Retry; keep last good Moment |
-| Invalid model JSON | One repair retry; then fail honestly |
-| Rate limit | Friendly wait + retry |
-| Validation failure | `400` with generic client message; log details server-side only |
-| Offline / network | Curated Learn + Safety still work; AI panels show retry |
-| `localStorage` corrupt | Reset Moment with user-visible notice |
+| Condition                | Behavior                                                        |
+| ------------------------ | --------------------------------------------------------------- |
+| Missing `GEMINI_API_KEY` | API `503`; UI “AI unavailable” — no fake scripts                |
+| Gemini timeout/error     | Banner + Retry; keep last good Moment                           |
+| Invalid model JSON       | One repair retry; then fail honestly                            |
+| Rate limit               | Friendly wait + retry                                           |
+| Validation failure       | `400` with generic client message; log details server-side only |
+| Offline / network        | Curated Learn + Safety still work; AI panels show retry         |
+| `localStorage` corrupt   | Reset Moment with user-visible notice                           |
 
 Fail closed: never present placeholder text as if it were a successful AI generation.
 

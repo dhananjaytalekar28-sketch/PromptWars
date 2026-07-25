@@ -1,19 +1,32 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useSession } from "@/shared/context/session-context";
+import { useSettings } from "@/shared/context/settings-context";
+import type { Role } from "@/features/profile/types";
+import { usePageTitle } from "@/shared/hooks/use-guards";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import type { Role } from "@/lib/types";
+import { useEffect, useState } from "react";
 
 export default function RolePicker() {
-  const { profile, setProfile, t } = useApp();
+  const { profile, setProfile } = useSession();
+  const { t } = useSettings();
   const router = useRouter();
   const [nickname, setNickname] = useState("");
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  if (profile) {
+  usePageTitle(t("role.title"));
+
+  useEffect(() => {
+    if (!profile) return;
     router.replace(profile.role === "person" ? "/person" : "/caregiver");
-    return null;
+  }, [profile, router]);
+
+  if (profile) {
+    return (
+      <p className="text-center text-sm text-[var(--color-text-muted)]" aria-live="polite">
+        {t("common.loading")}
+      </p>
+    );
   }
 
   function handleContinue() {
@@ -23,11 +36,11 @@ export default function RolePicker() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-8 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
       <h1 className="text-3xl font-bold">{t("role.title")}</h1>
-      <p className="text-[var(--color-text-muted)] max-w-md">{t("role.subtitle")}</p>
+      <p className="max-w-md text-[var(--color-text-muted)]">{t("role.subtitle")}</p>
 
-      <div className="flex gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
         <RoleCard
           role="person"
           label={t("role.person")}
@@ -45,7 +58,7 @@ export default function RolePicker() {
       </div>
 
       <div className="w-full max-w-xs">
-        <label htmlFor="nickname" className="block text-sm text-[var(--color-text-muted)] mb-1">
+        <label htmlFor="nickname" className="mb-1 block text-sm text-[var(--color-text-muted)]">
           {t("role.nickname.label")}
         </label>
         <input
@@ -54,15 +67,16 @@ export default function RolePicker() {
           maxLength={30}
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+          className="w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
           placeholder={t("role.nickname.placeholder")}
         />
       </div>
 
       <button
+        type="button"
         onClick={handleContinue}
         disabled={!selectedRole}
-        className="px-8 py-3 rounded-full bg-[var(--color-primary)] text-white font-semibold text-lg disabled:opacity-40 hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] transition-colors"
+        className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] disabled:opacity-40"
       >
         {t("role.continue")}
       </button>
@@ -85,17 +99,20 @@ function RoleCard({
 }) {
   return (
     <button
+      type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`flex flex-col items-center gap-2 p-6 rounded-xl border-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] ${
+      className={`flex min-h-11 flex-col items-center gap-2 rounded-[var(--radius)] border-2 p-6 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] ${
         selected
           ? "border-[var(--color-primary)] bg-[var(--color-chip-bg)]"
           : "border-[var(--color-border)] hover:border-[var(--color-primary)]"
       }`}
     >
-      <span className="text-3xl">{role === "person" ? "🧘" : "🤝"}</span>
+      <span className="text-3xl" aria-hidden="true">
+        {role === "person" ? "🧘" : "🤝"}
+      </span>
       <span className="font-semibold">{label}</span>
-      <span className="text-xs text-[var(--color-text-muted)] max-w-[150px]">{description}</span>
+      <span className="max-w-[150px] text-xs text-[var(--color-text-muted)]">{description}</span>
     </button>
   );
 }

@@ -6,25 +6,53 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "analyze": "cross-env ANALYZE=true next build",
+    "check:bundle": "node scripts/check-bundle-budget.mjs",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run check:bundle"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^2.13.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "server-only": "^0.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.11",
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "@vitest/coverage-v8": "^4.1.10",
+    "cross-env": "^10.1.0",
+    "eslint": "9.39.5",
     "eslint-config-next": "16.2.11",
-    "firebase-tools": "^15.24.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vercel": "^57.0.0"
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
+  },
+  "overrides": {
+    "minimatch": "10.2.5",
+    "brace-expansion": "5.0.8",
+    "postcss": "8.5.23",
+    "sharp": "0.35.3"
   }
 }

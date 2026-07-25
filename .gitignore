@@ -3,6 +3,14 @@
 .next
 node_modules
 
+# Generated reports and compiler state
+coverage/
+playwright-report/
+test-results/
+analyze/
+bundle-analysis/
+*.tsbuildinfo
+
 # Firebase
 .firebase
 out
@@ -20,3 +28,6 @@ Thumbs.db
 .vscode
 .idea
 *.swp
+
+# Agent workflow scratch
+.superpowers/

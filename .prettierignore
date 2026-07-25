@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+.vercel
+.firebase
+package-lock.json
+*.min.js
+*.min.css

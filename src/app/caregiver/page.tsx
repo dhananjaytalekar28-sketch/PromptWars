@@ -1,105 +1,147 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { callBriefing } from "@/lib/ai-service";
+import { useSession } from "@/shared/context/session-context";
+import { useSettings } from "@/shared/context/settings-context";
+import { useAiAction } from "@/features/ai/use-ai-action";
+import { usePageTitle, useRequireProfile } from "@/shared/hooks/use-guards";
 import Link from "next/link";
 
 export default function CaregiverHome() {
-  const { profile, moment, t } = useApp();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [briefing, setBriefing] = useState<{
-    briefing: string;
-    doSay: string[];
-    dontSay: string[];
-  } | null>(moment?.lastBriefing ?? null);
+  const { moment, updateMoment } = useSession();
+  const { lang, t, tDynamic } = useSettings();
+  const { ready, profile } = useRequireProfile("caregiver");
 
-  if (!profile || profile.role !== "caregiver") {
-    router.replace("/");
-    return null;
+  const { state, run, retry } = useAiAction({
+    action: "briefing",
+    initialData: moment?.lastBriefing
+      ? {
+          briefing: moment.lastBriefing.briefing,
+          doSay: moment.lastBriefing.doSay,
+          dontSay: moment.lastBriefing.dontSay,
+        }
+      : null,
+    onSuccess: (data) => {
+      updateMoment({
+        lastBriefing: {
+          ...data,
+          at: new Date().toISOString(),
+        },
+      });
+    },
+  });
+
+  usePageTitle(t("nav.home"));
+
+  if (!ready || !profile) {
+    return <p className="text-sm text-[var(--color-text-muted)]">{t("common.loading")}</p>;
   }
+
+  const briefing = state.data;
+  const loading = state.status === "loading";
+  const error = state.error?.safeMessage ?? null;
+  const status =
+    state.status === "loading"
+      ? t("ai.status.generating")
+      : state.status === "success"
+        ? t("ai.status.ready")
+        : null;
 
   async function generateBriefing() {
     if (!moment) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await callBriefing({
-        riskLevel: moment.riskLevel,
-        chips: moment.chips,
-        voiceOrTextNote: moment.voiceOrTextNote,
-      });
-      setBriefing(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+    await run({
+      riskLevel: moment.riskLevel,
+      chips: moment.chips,
+      voiceOrTextNote: moment.voiceOrTextNote,
+    });
   }
+
+  const updatedLabel = moment
+    ? new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(
+        new Date(moment.updatedAt),
+      )
+    : "";
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">
-        {profile.nickname ? t("caregiver.greeting", { name: profile.nickname }) : t("caregiver.greeting.default")}
+        {profile.nickname
+          ? t("caregiver.greeting", { name: profile.nickname })
+          : t("caregiver.greeting.default")}
       </h1>
 
+      <div className="sr-only" aria-live="polite">
+        {status}
+      </div>
+
       {!moment ? (
-        <div className="p-6 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center">
+        <div className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center">
           <p className="text-[var(--color-text-muted)]">{t("caregiver.empty")}</p>
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">{t("caregiver.empty.tip")}</p>
         </div>
       ) : (
         <>
-          <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+          <div className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
             <p className="text-sm text-[var(--color-text-muted)]">{t("caregiver.lastcheckin")}</p>
             <p className="font-semibold">
               {t("caregiver.urgelevel", {
                 level: String(moment.riskLevel),
-                chips: moment.chips.map((c) => t(`chip.${c}`)).join(", "),
+                chips: moment.chips.map((c) => tDynamic(`chip.${c}`)).join(", "),
               })}
             </p>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              {t("common.updated")}: {new Date(moment.updatedAt).toLocaleString()}
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              {t("common.updated")}: {updatedLabel}
             </p>
           </div>
 
           <button
+            type="button"
             onClick={generateBriefing}
             disabled={loading}
-            className="self-start px-6 py-3 rounded-full bg-[var(--color-primary)] text-white font-semibold disabled:opacity-40 hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] transition-colors"
+            className="min-h-11 self-start rounded-[var(--radius-control)] bg-[var(--color-primary)] px-6 py-3 font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] disabled:opacity-40"
           >
-            {loading ? t("caregiver.generating") : briefing ? t("caregiver.regenerate") : t("caregiver.generate")}
+            {loading
+              ? t("caregiver.generating")
+              : briefing
+                ? t("caregiver.regenerate")
+                : t("caregiver.generate")}
           </button>
 
           {error && (
-            <div role="alert" className="p-3 rounded-lg bg-red-100 dark:bg-red-950 text-[var(--color-danger)] text-sm">
-              {error} — <button onClick={generateBriefing} className="underline font-medium">{t("error.retry")}</button>
+            <div
+              role="alert"
+              className="rounded-[var(--radius)] bg-red-100 p-3 text-sm text-[var(--color-danger)] dark:bg-red-950"
+            >
+              {error} —{" "}
+              <button type="button" onClick={() => void retry()} className="font-medium underline">
+                {t("error.retry")}
+              </button>
             </div>
           )}
 
           {briefing && (
             <section className="flex flex-col gap-4">
-              <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
-                <h2 className="font-semibold mb-2">{t("caregiver.experiencing")}</h2>
+              <div className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+                <h2 className="mb-2 font-semibold">{t("caregiver.experiencing")}</h2>
                 <p className="text-sm text-[var(--color-text-muted)]">{briefing.briefing}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="p-4 rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                  <h3 className="font-semibold text-[var(--color-success)] mb-2">✓ {t("caregiver.dosay")}</h3>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    {briefing.doSay.map((item, i) => (
-                      <li key={i}>{item}</li>
+                <div className="rounded-[var(--radius)] border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
+                  <h3 className="mb-2 font-semibold text-[var(--color-success)]">
+                    {t("caregiver.dosay")}
+                  </h3>
+                  <ul className="list-inside list-disc space-y-1 text-sm">
+                    {briefing.doSay.map((item) => (
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </div>
-                <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-                  <h3 className="font-semibold text-[var(--color-danger)] mb-2">✗ {t("caregiver.dontsay")}</h3>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    {briefing.dontSay.map((item, i) => (
-                      <li key={i}>{item}</li>
+                <div className="rounded-[var(--radius)] border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+                  <h3 className="mb-2 font-semibold text-[var(--color-danger)]">
+                    {t("caregiver.dontsay")}
+                  </h3>
+                  <ul className="list-inside list-disc space-y-1 text-sm">
+                    {briefing.dontSay.map((item) => (
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </div>
@@ -107,18 +149,18 @@ export default function CaregiverHome() {
             </section>
           )}
 
-          <div className="flex gap-3 mt-2">
+          <div className="mt-2 flex flex-wrap gap-3">
             <Link
               href="/scripts"
-              className="px-5 py-2 rounded-full border-2 border-[var(--color-primary)] text-[var(--color-primary)] font-semibold hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+              className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border-2 border-[var(--color-primary)] px-5 py-2 font-semibold text-[var(--color-primary)] hover:bg-[var(--color-chip-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             >
-              📝 {t("caregiver.viewscripts")}
+              {t("caregiver.viewscripts")}
             </Link>
             <Link
               href="/safety"
-              className="px-5 py-2 rounded-full border-2 border-[var(--color-danger)] text-[var(--color-danger)] font-semibold hover:bg-red-50 dark:hover:bg-red-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+              className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border-2 border-[var(--color-danger)] px-5 py-2 font-semibold text-[var(--color-danger)] hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] dark:hover:bg-red-950"
             >
-              🆘 {t("caregiver.safety")}
+              {t("caregiver.safety")}
             </Link>
           </div>
         </>

@@ -1,36 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: #f8fafc;
+  --color-bg: #f6f8fb;
   --color-surface: #ffffff;
-  --color-text: #1e293b;
-  --color-text-muted: #64748b;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-danger: #dc2626;
-  --color-success: #16a34a;
-  --color-border: #e2e8f0;
-  --color-focus-ring: #3b82f6;
-  --color-chip-bg: #e0f2fe;
-  --color-chip-active: #2563eb;
+  --color-text: #172033;
+  --color-text-muted: #526071;
+  --color-primary: #2557d6;
+  --color-primary-hover: #1946b8;
+  --color-danger: #b42318;
+  --color-success: #15803d;
+  --color-border: #cbd5e1;
+  --color-focus-ring: #1d4ed8;
+  --color-chip-bg: #eef3f8;
+  --color-chip-active: #2557d6;
   --color-chip-text: #0c4a6e;
+  --color-alert-bg: #fff8eb;
+  --color-alert-border: #f5d9a8;
+  --color-alert-text: #7a4b00;
   --radius: 0.75rem;
+  --radius-control: 0.625rem;
+  --shell-width: 72rem;
+  --content-width: 47.5rem;
+  --compare-width: 60rem;
+  --space-page: 1.5rem;
+  --space-section: 2rem;
+  --header-height: 4rem;
+  --bottom-nav-height: 4.5rem;
 }
 
 [data-theme="dark"] {
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-text: #f1f5f9;
-  --color-text-muted: #94a3b8;
-  --color-primary: #60a5fa;
-  --color-primary-hover: #93c5fd;
-  --color-danger: #f87171;
-  --color-success: #4ade80;
-  --color-border: #334155;
-  --color-focus-ring: #60a5fa;
-  --color-chip-bg: #1e3a5f;
-  --color-chip-active: #60a5fa;
-  --color-chip-text: #bae6fd;
+  --color-bg: #0d1424;
+  --color-surface: #151f32;
+  --color-text: #f7f9fc;
+  --color-text-muted: #b5c0d0;
+  --color-primary: #8db3ff;
+  --color-primary-hover: #a8c5ff;
+  --color-danger: #ff9b91;
+  --color-success: #6ee7a0;
+  --color-border: #40506a;
+  --color-focus-ring: #a8c5ff;
+  --color-chip-bg: #1d2940;
+  --color-chip-active: #8db3ff;
+  --color-chip-text: #dbeafe;
+  --color-alert-bg: #2a2112;
+  --color-alert-border: #6b4e1e;
+  --color-alert-text: #f7c66a;
 }
 
 * {
@@ -39,6 +53,40 @@
 
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: -3rem;
+  z-index: 100;
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: var(--shell-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 840px) {
+  .app-shell {
+    padding-inline: 2rem;
+  }
+
+  :root {
+    --space-page: 2.5rem;
+    --space-section: 2.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
