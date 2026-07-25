@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { callBriefing } from "@/lib/ai-service";
 import Link from "next/link";
 
 export default function CaregiverHome() {
@@ -26,20 +27,11 @@ export default function CaregiverHome() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/briefing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          riskLevel: moment.riskLevel,
-          chips: moment.chips,
-          voiceOrTextNote: moment.voiceOrTextNote,
-        }),
+      const data = await callBriefing({
+        riskLevel: moment.riskLevel,
+        chips: moment.chips,
+        voiceOrTextNote: moment.voiceOrTextNote,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Request failed");
-      }
-      const data = await res.json();
       setBriefing(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppContext";
 import { useState } from "react";
 import { LEARN_CARDS, type LearnCard } from "@/lib/learn-cards";
+import { callLearn } from "@/lib/ai-service";
 
 export default function LearnPage() {
   const { moment, updateMoment, t } = useApp();
@@ -18,20 +19,11 @@ export default function LearnPage() {
     setPersonalizing(card.id);
     setError(null);
     try {
-      const res = await fetch("/api/learn", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          riskLevel: moment.riskLevel,
-          chips: moment.chips,
-          cardId: card.id,
-        }),
+      const data = await callLearn({
+        riskLevel: moment.riskLevel,
+        chips: moment.chips,
+        cardId: card.id,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Request failed");
-      }
-      const data = await res.json();
       setBlurbs((prev) => ({ ...prev, [card.id]: data.blurb }));
       updateMoment({ lastLearnBlurb: { cardId: card.id, blurb: data.blurb, at: new Date().toISOString() } });
     } catch (err) {

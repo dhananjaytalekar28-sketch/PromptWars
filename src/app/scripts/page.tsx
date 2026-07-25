@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { callScripts } from "@/lib/ai-service";
 
 export default function ScriptsPage() {
   const { moment, updateMoment, t } = useApp();
@@ -22,20 +23,11 @@ export default function ScriptsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/scripts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          riskLevel: moment!.riskLevel,
-          chips: moment!.chips,
-          voiceOrTextNote: moment!.voiceOrTextNote,
-        }),
+      const data = await callScripts({
+        riskLevel: moment!.riskLevel,
+        chips: moment!.chips,
+        voiceOrTextNote: moment!.voiceOrTextNote,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Request failed");
-      }
-      const data = await res.json();
       setScripts(data);
       updateMoment({ lastScripts: { ...data, at: new Date().toISOString() } });
     } catch (err) {

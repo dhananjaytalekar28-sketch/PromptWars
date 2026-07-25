@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { callIntervene } from "@/lib/ai-service";
 
 export default function IntervenePage() {
   const { moment, updateMoment, t } = useApp();
@@ -22,20 +23,11 @@ export default function IntervenePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/intervene", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          riskLevel: moment!.riskLevel,
-          chips: moment!.chips,
-          voiceOrTextNote: moment!.voiceOrTextNote,
-        }),
+      const data = await callIntervene({
+        riskLevel: moment!.riskLevel,
+        chips: moment!.chips,
+        voiceOrTextNote: moment!.voiceOrTextNote,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Request failed");
-      }
-      const data = await res.json();
       setSteps(data.steps);
       updateMoment({ lastIntervention: { steps: data.steps, at: new Date().toISOString() } });
     } catch (err) {
